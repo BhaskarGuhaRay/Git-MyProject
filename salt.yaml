@@ -1,0 +1,230 @@
+system:
+  network.system:
+    - enabled: True
+    - hostname: server1.example.com
+    - gateway: 192.168.0.1
+    - gatewaydev: eth0
+    - nozeroconf: True
+    - nisdomain: example.com
+    - require_reboot: True
+
+eth0:
+  network.managed:
+    - enabled: True
+    - type: eth
+    - proto: none
+    - ipaddr: 10.1.0.1
+    - netmask: 255.255.255.0
+    - dns:
+      - 8.8.8.8
+      - 8.8.4.4
+
+eth0-range0:
+  network.managed:
+    - type: eth
+    - ipaddr_start: 192.168.1.1
+    - ipaddr_end: 192.168.1.10
+    - clonenum_start: 10
+    - mtu: 9000
+
+bond0-range0:
+  network.managed:
+    - type: eth
+    - ipaddr_start: 192.168.1.1
+    - ipaddr_end: 192.168.1.10
+    - clonenum_start: 10
+    - mtu: 9000
+
+eth1.0-range0:
+  network.managed:
+    - type: eth
+    - ipaddr_start: 192.168.1.1
+    - ipaddr_end: 192.168.1.10
+    - clonenum_start: 10
+    - vlan: True
+    - mtu: 9000
+
+bond0.1-range0:
+  network.managed:
+    - type: eth
+    - ipaddr_start: 192.168.1.1
+    - ipaddr_end: 192.168.1.10
+    - clonenum_start: 10
+    - vlan: True
+    - mtu: 9000
+
+.. note::
+    add support of ranged interfaces (vlan, bond and eth) for redhat system,
+    Important:type must be eth.
+
+routes:
+  network.routes:
+    - name: eth0
+    - routes:
+      - name: secure_network
+        ipaddr: 10.2.0.0
+        netmask: 255.255.255.0
+        gateway: 10.1.0.3
+      - name: HQ_network
+        ipaddr: 10.100.0.0
+        netmask: 255.255.0.0
+        gateway: 10.1.0.10
+
+eth2:
+  network.managed:
+    - enabled: True
+    - type: slave
+    - master: bond0
+
+eth3:
+  network.managed:
+    - enabled: True
+    - type: slave
+    - master: bond0
+
+eth4:
+  network.managed:
+    - enabled: True
+    - type: eth
+    - proto: dhcp
+    - bridge: br0
+
+eth5:
+  network.managed:
+    - enabled: True
+    - type: eth
+    - proto: dhcp
+    - noifupdown: True  # Do not restart the interface
+                        # you need to reboot/reconfigure manualy
+
+bond0:
+  network.managed:
+    - type: bond
+    - ipaddr: 10.1.0.1
+    - netmask: 255.255.255.0
+    - mode: active-backup
+    - proto: static
+    - dns:
+      - 8.8.8.8
+      - 8.8.4.4
+    - ipv6:
+    - enabled: False
+    - slaves: eth2 eth3
+    - require:
+      - network: eth2
+      - network: eth3
+    - miimon: 100
+    - arp_interval: 250
+    - downdelay: 200
+    - lacp_rate: fast
+    - max_bonds: 1
+    - updelay: 0
+    - use_carrier: on
+    - xmit_hash_policy: layer2
+    - mtu: 9000
+    - autoneg: on
+    - speed: 1000
+    - duplex: full
+    - rx: on
+    - tx: off
+    - sg: on
+    - tso: off
+    - ufo: off
+    - gso: off
+    - gro: off
+    - lro: off
+
+bond0.2:
+  network.managed:
+    - type: vlan
+    - ipaddr: 10.1.0.2
+    - use:
+      - network: bond0
+    - require:
+      - network: bond0
+
+bond0.3:
+  network.managed:
+    - type: vlan
+    - ipaddr: 10.1.0.3
+    - use:
+      - network: bond0
+    - require:
+      - network: bond0
+
+bond0.10:
+  network.managed:
+    - type: vlan
+    - ipaddr: 10.1.0.4
+    - use:
+      - network: bond0
+    - require:
+      - network: bond0
+
+bond0.12:
+  network.managed:
+    - type: vlan
+    - ipaddr: 10.1.0.5
+    - use:
+      - network: bond0
+    - require:
+      - network: bond0
+br0:
+  network.managed:
+    - enabled: True
+    - type: bridge
+    - proto: dhcp
+    - bridge: br0
+    - delay: 0
+    - ports: eth4
+    - bypassfirewall: True
+    - use:
+      - network: eth4
+    - require:
+      - network: eth4
+
+system:
+  network.system:
+    - enabled: True
+    - hostname: server1.example.com
+    - gateway: 192.168.0.1
+    - gatewaydev: eth0
+    - nozeroconf: True
+    - nisdomain: example.com
+    - require_reboot: True
+    - apply_hostname: True
+
+lo:
+  network.managed:
+    - name: lo
+    - type: eth
+    - onboot: yes
+    - userctl: no
+    - ipv6_autoconf: no
+    - enable_ipv6: true
+    - ipaddrs:
+      - 127.0.0.1/8
+      - 10.1.0.4/32
+      - 10.1.0.12/32
+    - ipv6addrs:
+      - fc00::1/128
+      - fc00::100/128
+
+.. note::
+    Apply changes to hostname immediately.
+
+.. versionadded:: 2015.5.0
+
+system:
+  network.system:
+    - hostname: server2.example.com
+    - apply_hostname: True
+    - retain_settings: True
+
+.. note::
+    Use `retain_settings` to retain current network settings that are not
+    otherwise specified in the state. Particularly useful if only setting
+    the hostname. Default behavior is to delete unspecified network
+    settings.
+
+.. versionadded:: 2016.11.0
